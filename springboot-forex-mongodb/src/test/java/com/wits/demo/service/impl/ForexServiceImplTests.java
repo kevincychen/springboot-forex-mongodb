@@ -1,7 +1,7 @@
 package com.wits.demo.service.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -24,6 +24,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wits.demo.dto.Collection;
+import com.wits.demo.dto.QueryDto;
+import com.wits.demo.dto.QueryResponseSuccess;
+import com.wits.demo.repository.CollectionRepository;
 import com.wits.demo.service.ForexService;
 
 @SpringBootTest
@@ -50,6 +53,9 @@ class ForexServiceImplTests {
 
 	@Autowired
 	ForexService forexService;
+
+	@Autowired
+	private CollectionRepository collectionRepo;
 
 	List<Object> testGetForexData() {
 		List<Object> objectList = forexService.getForexData();
@@ -78,17 +84,40 @@ class ForexServiceImplTests {
 
 	@Test
 	void testInsertToMongoDb() {
-		fail("Not yet implemented");
+		Collection collection = new Collection();
+		collection.setDate("20240102");
+		collection.setUsdNtd("30.866");
+		collection.setRmbNtd("4.325685");
+		collection.setEurUsd("1.1031");
+		collection.setUsdHkd("141.345");
+		collection.setUsdRmb("7.14795");
+		collection.setUsdZar("18.54865");
+		collection.setNzdUsd("0.6264");
+		List<Object> collectionList = new ArrayList<>();
+		collectionList.add(collection);
+		forexService.insertToMongoDb(collectionList);
+		List<Collection> resultList = collectionRepo.findAll();
+		assertEquals("30.866", resultList.get(0).getUsdNtd());
 	}
 
 	@Test
 	void testValidateQueryRequest() {
-		fail("Not yet implemented");
+		QueryDto queryDto = new QueryDto();
+		// 比一年前還早的起始時間
+		queryDto.setStartDate("2023/2/18");
+		queryDto.setEndDate("2024/2/18");
+		queryDto.setCurrency("usd");
+		assertEquals(false, forexService.validateQueryRequest(queryDto));
 	}
 
 	@Test
 	void testQueryDb() {
-		fail("Not yet implemented");
+		QueryDto queryDto = new QueryDto();
+		queryDto.setStartDate("2024/01/02");
+		queryDto.setEndDate("2024/01/02");
+		queryDto.setCurrency("usd");
+		QueryResponseSuccess queryResponseSuccess = forexService.queryDb(queryDto);
+		assertEquals("0000", queryResponseSuccess.getError().getCode());
 	}
 
 }
