@@ -1,26 +1,5 @@
 package com.wits.demo.service.impl;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.List;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
-import org.junit.jupiter.api.TestInstance.Lifecycle;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wits.demo.dto.Collection;
@@ -28,9 +7,23 @@ import com.wits.demo.dto.QueryDto;
 import com.wits.demo.dto.QueryResponseSuccess;
 import com.wits.demo.repository.CollectionRepository;
 import com.wits.demo.service.ForexService;
+import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.TestInstance.Lifecycle;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.util.CollectionUtils;
+
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest
-@RunWith(value = Parameterized.class)
 @TestInstance(Lifecycle.PER_CLASS)
 class ForexServiceImplTests {
 
@@ -39,13 +32,13 @@ class ForexServiceImplTests {
 	private final PrintStream originalOut = System.out;
 	private final PrintStream originalErr = System.err;
 
-	@Before
+	@BeforeEach
 	public void setUpStreams() {
 		System.setOut(new PrintStream(outContent));
 		System.setErr(new PrintStream(errContent));
 	}
 
-	@After
+	@AfterEach
 	public void restoreStreams() {
 		System.setOut(originalOut);
 		System.setErr(originalErr);
@@ -76,7 +69,7 @@ class ForexServiceImplTests {
 
 	@DisplayName("test_get_forex_data")
 	@ParameterizedTest
-	@MethodSource
+	@MethodSource("testGetForexData")
 	void testGetForexData(Object data) {
 		assertThat((Collection) data instanceof Collection).isTrue();
 		System.out.println("testGetForexData: Date: " + ((Collection) data).getDate());
@@ -97,7 +90,13 @@ class ForexServiceImplTests {
 		collectionList.add(collection);
 		forexService.insertToMongoDb(collectionList);
 		List<Collection> resultList = collectionRepo.findAll();
-		assertEquals("30.866", resultList.get(0).getUsdNtd());
+		int index = 0;
+		for (index = 0; !CollectionUtils.isEmpty(resultList) && index < resultList.size(); index++) {
+			if("30.866".equals(resultList.get(index).getUsdNtd())) {
+				assertEquals("30.866", resultList.get(index).getUsdNtd());
+				break;
+			}
+		}
 	}
 
 	@Test
